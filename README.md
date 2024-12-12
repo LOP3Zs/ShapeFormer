@@ -1,4 +1,4 @@
-# Amodal Instance Segmentation with Transformer
+# ShapeFormer: Shape Prior Visible-to-Amodal Transformer-based Amodal Instance Segmentation
 Table of Contents
 * [Introduction](#introduction)
 * [Usage](#usage)
