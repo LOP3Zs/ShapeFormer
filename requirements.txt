@@ -1,17 +1,12 @@
-# Core ML libraries
+# Core ML libraries (Vast.ai usually has PyTorch pre-installed)
 tensorboard
 cmake
 onnx
 
-# PyTorch ecosystem (CUDA compatible - will auto-detect CUDA version)
-torch>=1.11.0
-torchvision>=0.12.0
-torchaudio>=0.11.0
-
-# Facebook Research tools
+# Facebook Research libraries
 git+https://github.com/facebookresearch/fvcore
 
-# Computer Vision & ML utilities
+# Computer Vision & Object Detection
 pycocotools
 ninja
 yacs
@@ -19,17 +14,24 @@ cython
 matplotlib
 tqdm
 shapely
-opencv-python>=4.5.0
+
+# OpenCV (exact version from Dockerfile)
+opencv-python==4.4.0.40
+
+# Machine Learning libraries
 scikit-learn
 scikit-image
-timm>=0.6.0
 
-# Build tools
-setuptools>=59.5.0
+# Model libraries (exact version from Dockerfile)
+timm==0.4.12
+
+# Setup tools (exact version from Dockerfile)
+setuptools==59.5.0
+
+# Logging & Visualization
 tensorboardX
 
-# Detectron2 with CUDA support
-detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/index.html
-
-# Custom library
-git+https://github.com/trqminh/aistron@v0.1.0
+# Note: PyTorch (torch, torchvision, torchaudio) usually pre-installed on Vast.ai
+# Note: Install these separately after requirements.txt:
+# detectron2 - requires CUDA-specific installation
+# aistron - custom library installation
