@@ -7,5 +7,5 @@ MODEL:
   ROI_MASK_HEAD:
     NAME: ShapeFormerv2
 SHAPEFORMER:
-  SEARCHER_PRETRAINED: ../data/train_outputs/6_shapeformer/release/prior_models/cvqvae_cocoa_cls_K128/cvqvae_cocoa_cls_K128.pt
+  SEARCHER_PRETRAINED: 
 OUTPUT_DIR: ../data/train_outputs/6_shapeformer/release/main_models/shapeformer_release_R50_FPN_cocoa_cls/
