@@ -17,7 +17,6 @@ shapely
 
 # OpenCV (exact version from Dockerfile)
 opencv-python==4.4.0.40
-
 # Machine Learning libraries
 scikit-learn
 scikit-image

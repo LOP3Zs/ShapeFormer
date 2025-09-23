@@ -30,7 +30,7 @@ def mask_to_polygon(mask):
     return max(polygons, key=len)  # Trả về contour lớn nhất
 
 def mask_to_bbox(mask):
-    """Tính bbox từ mask"""
+    """Tính bbox từ mask theo format [x, y, width, height]"""
     coords = np.where(mask > 0)
     if len(coords[0]) == 0:
         return [0, 0, 0, 0]
@@ -55,7 +55,7 @@ def create_class_object_matrix(image_id: str, coco_json: str) -> np.ndarray:
     
     if not target_image_info:
         print(f"❌ Không tìm thấy ảnh: {image_id}")
-        return None
+        return None, None
     
     img_width = target_image_info['width']
     img_height = target_image_info['height']
@@ -183,7 +183,7 @@ def find_occluders(visible_mask, amodal_mask, sorted_matrices, current_idx):
 
 def create_cocoa_format(coco_json: str, output_json: str, depth_dir: str):
     """
-    Tạo file JSON theo format COCOA với visible và amodal masks
+    Tạo file JSON theo format COCOA tương thích với AIstron preprocessing
     """
     with open(coco_json, 'r') as f:
         data = json.load(f)
@@ -199,16 +199,16 @@ def create_cocoa_format(coco_json: str, output_json: str, depth_dir: str):
         height = img['height']
         width = img['width']
         
-        # Thêm depth file info
+        # Thêm depth file info (nếu cần)
         depth_path = img_filename[:6]
         depth_file = f"{depth_path}_depth.png"
         
+        # Format images theo COCO standard
         new_image = {
             "id": img_id,
             "file_name": img_filename,
             "width": width,
-            "height": height,
-            "depth_file": depth_file
+            "height": height
         }
         images.append(new_image)
         
@@ -242,32 +242,32 @@ def create_cocoa_format(coco_json: str, output_json: str, depth_dir: str):
                 
             class_id = int(class_ids[0])
             
-            # Tạo polygons
+            # Tạo polygons cho segmentation (amodal)
             amodal_polygon = mask_to_polygon(amodal_mask)
-            visible_polygon = mask_to_polygon(visible_mask)
-            
             if len(amodal_polygon) == 0:
                 continue
             
-            # Tính bboxes
+            # Tạo visible mask polygon
+            visible_polygon = mask_to_polygon(visible_mask) if np.any(visible_mask) else []
+            
+            # Tính bbox từ amodal mask (theo COCO format)
             amodal_bbox = mask_to_bbox(amodal_mask)
-            visible_bbox = mask_to_bbox(visible_mask) if len(visible_polygon) > 0 else [0, 0, 0, 0]
             
             # Tìm occluders
             occluders = find_occluders(visible_mask, amodal_mask, sorted_matrix, i)
             
+            # Format annotation để tương thích với AIstron preprocessing
             annotation = {
                 "id": annotation_id,
                 "image_id": img_id,
                 "category_id": class_id,
-                "visible_segm": [visible_polygon] if len(visible_polygon) > 0 else [],
-                "visible_bbox": visible_bbox,
-                "amodal_segm": [amodal_polygon],
-                "amodal_bbox": amodal_bbox,
+                "segmentation": [amodal_polygon],  # Sẽ được rename thành amodal_segm
+                "bbox": amodal_bbox,              # Sẽ được copy thành amodal_bbox và visible_bbox
+                "visible_mask": [visible_polygon] if len(visible_polygon) > 0 else [],  # Sẽ được rename thành visible_segm
                 "iscrowd": 0,
-                "occluders": occluders,
                 "area": int(np.sum(amodal_mask > 0)),
-                "visible_area": int(np.sum(visible_mask > 0))
+                "visible_area": int(np.sum(visible_mask > 0)),
+                "occluders": occluders  # Thông tin bổ sung
             }
             
             annotations.append(annotation)
@@ -280,11 +280,16 @@ def create_cocoa_format(coco_json: str, output_json: str, depth_dir: str):
         if cat['id'] in used_classes:
             print(f"   {cat['id']}: {cat['name']}")
     
-    # Tạo dữ liệu mới theo format COCOA
+    # Tạo dữ liệu theo COCO format chuẩn (sẽ được convert bởi AIstron script)
     cocoa_data = {
         "images": images,
         "annotations": annotations,
-        "categories": categories
+        "categories": categories,
+        "info": {
+            "description": "COCOA format dataset for amodal segmentation",
+            "version": "1.0",
+            "year": 2024
+        }
     }
     
     # Ghi file
@@ -294,6 +299,7 @@ def create_cocoa_format(coco_json: str, output_json: str, depth_dir: str):
     print(f"✅ Đã tạo file COCOA format: {output_json}")
     print(f"📊 Tổng số ảnh: {len(images)}")
     print(f"📊 Tổng số annotations: {len(annotations)}")
+    print(f"💡 File này sẽ được convert bởi script AIstron preprocessing")
 
 if __name__ == "__main__":
     coco_json = "train/_annotations.coco.json"
